@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaula Institutional Archive - Editor v3</title>
+    <title>Kaula Institutional Archive - Scriptorium OS</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fcfaf8; color: #1c1917; }
         .serif { font-family: 'Playfair Display', serif; }
+        .mono { font-family: 'Fira Code', monospace; }
         .hidden { display: none; }
+        .demo-pill { @apply cursor-pointer px-4 py-2 rounded-full border border-stone-200 text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 transition-all text-stone-600; }
         .active-row { border-left: 4px solid #c2410c !important; background-color: #fffaf0 !important; }
+        #previewPane { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 10px; }
     </style>
@@ -20,172 +25,330 @@
 
     <div id="authPage" class="fixed inset-0 z-[100] flex items-center justify-center bg-stone-100">
         <div class="bg-white p-12 rounded-[50px] shadow-2xl w-[450px] border border-stone-200 text-center">
-            <h1 class="serif text-4xl mb-2">Kaula Archive</h1>
-            <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-10">Institutional Entry</p>
-            <div class="space-y-4">
-                <input type="text" id="uIn" placeholder="Username" class="w-full p-4 bg-stone-50 border rounded-2xl outline-none text-sm">
-                <input type="password" id="pIn" placeholder="Password" class="w-full p-4 bg-stone-50 border rounded-2xl outline-none text-sm">
-                <button onclick="login()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all">Enter Portal</button>
+            <h1 class="serif text-4xl text-stone-900 mb-2">Kaula Archive</h1>
+            <p class="text-[10px] text-stone-400 uppercase tracking-[0.3em] font-bold mb-10">Varanasi Digital Lab</p>
+            
+            <div class="space-y-4 mb-10">
+                <input type="text" id="uIn" placeholder="Username" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                <input type="password" id="pIn" placeholder="Password" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                <button onclick="handleLogin()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg">Enter Portal</button>
             </div>
-            <div class="mt-8 flex flex-wrap justify-center gap-2">
-                <div onclick="demo('admin')" class="cursor-pointer px-3 py-1 border rounded-full text-[9px] font-bold uppercase">Admin</div>
-                <div onclick="demo('typist')" class="cursor-pointer px-3 py-1 border rounded-full text-[9px] font-bold uppercase">Typist</div>
-                <div onclick="demo('proof')" class="cursor-pointer px-3 py-1 border rounded-full text-[9px] font-bold uppercase">Proofreader</div>
+
+            <div class="pt-8 border-t border-stone-100">
+                <p class="text-[9px] text-orange-600 font-black uppercase tracking-widest mb-4 italic underline underline-offset-4 decoration-2">Demo Roles</p>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <div onclick="quickDemo('admin')" class="demo-pill border-orange-200 text-orange-700">Admin</div>
+                    <div onclick="quickDemo('scholar')" class="demo-pill border-blue-200 text-blue-700">Scholar</div>
+                    <div onclick="quickDemo('proof')" class="demo-pill">Proofreader</div>
+                    <div onclick="quickDemo('typist')" class="demo-pill">Typist</div>
+                    <div onclick="quickDemo('guest')" class="demo-pill bg-stone-900 text-white border-none">Guest</div>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="dashboard" class="hidden flex h-full">
+        
         <aside class="w-72 bg-stone-950 text-stone-400 flex flex-col border-r border-stone-900 overflow-y-auto">
             <div class="p-8 border-b border-stone-900">
-                <h2 class="text-white font-bold text-xl italic">KAULA <span class="text-orange-500">OS</span></h2>
+                <h2 class="text-white font-bold tracking-tighter text-2xl italic">Archive <span class="text-orange-500 text-xs">OS</span></h2>
             </div>
-            <nav class="p-6 space-y-4">
-                <button onclick="setView('catalog')" class="w-full text-left text-xs font-bold hover:text-white transition-all">📖 Library Catalog</button>
-                <button id="navAdmin" onclick="setView('admin')" class="hidden w-full text-left text-xs font-bold text-orange-500">🛡️ User Governance</button>
-                
-                <div class="mt-10">
-                    <p class="text-[9px] font-black text-stone-600 uppercase mb-4 tracking-widest">Vertical Search</p>
-                    <select id="fTantra" onchange="fetchData()" class="w-full bg-stone-900 border-none rounded-lg p-2 text-[10px] text-stone-300 outline-none mb-4">
-                        <option value="">All Tantras</option>
-                        <option>Tantraloka</option>
-                        <option>Satsahasra</option>
-                    </select>
+            
+            <div class="p-6">
+                <nav class="space-y-1 mb-10">
+                    <p class="px-4 text-[9px] uppercase tracking-widest font-black text-stone-700 mb-2">Library</p>
+                    <button onclick="switchView('catalog')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/5 transition-all text-sm">📖 Catalog</button>
+                    <button id="navUpload" onclick="switchView('upload')" class="hidden w-full text-left px-4 py-2 rounded-lg hover:bg-white/5 transition-all text-sm">📤 Upload Folio</button>
+                    <button id="navAdmin" onclick="switchView('admin')" class="hidden w-full text-left px-4 py-2 rounded-lg text-orange-400 text-sm font-bold">🛡️ Governance</button>
+                    <button onclick="switchView('profile')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/5 transition-all text-sm">👤 Settings</button>
+                </nav>
+
+                <div class="space-y-6">
+                    <div>
+                        <p class="px-4 text-[9px] uppercase tracking-widest font-black text-stone-700 mb-4">Vertical Filter</p>
+                        <select id="filterAuthor" onchange="fetchLibrary()" class="w-full bg-stone-900 border-none rounded-xl p-3 text-[10px] text-stone-300 outline-none mb-3">
+                            <option value="">All Authors</option>
+                            <option>Abhinavagupta</option><option>Utpaladeva</option><option>Vasugupta</option>
+                        </select>
+                        <select id="filterTantra" onchange="fetchLibrary()" class="w-full bg-stone-900 border-none rounded-xl p-3 text-[10px] text-stone-300 outline-none">
+                            <option value="">All Tantras</option>
+                            <option>Tantraloka</option><option>Satsahasra</option><option>Siva Sutras</option>
+                        </select>
+                    </div>
+
+                    <div id="resumeBox" class="hidden p-4 bg-orange-900/10 rounded-2xl border border-orange-900/20">
+                        <p class="text-[9px] text-orange-500 font-black uppercase mb-2">Resume Session</p>
+                        <p id="resumeTitle" class="text-[10px] text-stone-300 italic mb-3">--</p>
+                        <button onclick="handleResume()" class="w-full bg-orange-600 text-white py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest">Continue Reading</button>
+                    </div>
                 </div>
-            </nav>
-            <div class="mt-auto p-6 bg-black border-t border-stone-900">
-                <p class="text-xs text-white font-bold" id="uName">--</p>
-                <p class="text-[9px] uppercase text-stone-600" id="uRole">--</p>
-                <button onclick="logout()" class="mt-2 text-[10px] text-stone-700 hover:text-white uppercase font-bold">Sign Out</button>
+            </div>
+
+            <div class="mt-auto p-6 bg-black flex items-center justify-between border-t border-stone-900">
+                <div>
+                    <p class="text-xs text-white font-bold" id="uiName">--</p>
+                    <p class="text-[9px] uppercase text-stone-600 font-black tracking-widest" id="uiRole">--</p>
+                </div>
+                <button onclick="handleLogout()" class="text-[10px] font-black text-stone-800 hover:text-white uppercase transition-colors">Exit</button>
             </div>
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 bg-[#f8f5f2] overflow-hidden">
+            
             <section id="v-catalog" class="flex-1 flex flex-col p-10 overflow-hidden">
-                <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search..." class="w-full p-4 rounded-2xl shadow-sm border-none mb-8 text-sm">
+                <header class="mb-8">
+                    <h2 class="serif text-4xl text-stone-900 mb-6">Research Repository</h2>
+                    <input type="text" id="mSearch" oninput="fetchLibrary()" placeholder="Central Search by Volume, Chapter, or IAST Title..." class="w-full p-4 rounded-3xl shadow-sm border-none outline-none focus:ring-4 focus:ring-orange-500/10 text-sm transition-all">
+                </header>
                 <div id="catalogList" class="flex-1 overflow-y-auto space-y-3 pr-4"></div>
+            </section>
+
+            <section id="v-upload" class="hidden flex-1 p-20 overflow-y-auto">
+                <div class="max-w-2xl mx-auto bg-white p-12 rounded-[40px] shadow-sm border border-stone-200">
+                    <h2 class="serif text-3xl mb-8 text-stone-900">Submit New Folio</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input type="text" id="upTitle" placeholder="Title (IAST)" class="p-4 bg-stone-50 border rounded-2xl outline-none text-sm">
+                        <input type="text" id="upVol" placeholder="Vol / Ch" class="p-4 bg-stone-50 border rounded-2xl outline-none text-sm">
+                    </div>
+                    <textarea id="upDesc" placeholder="Brief manuscript description..." class="w-full p-4 bg-stone-50 border rounded-2xl outline-none text-sm mb-6 h-32"></textarea>
+                    <div class="border-2 border-dashed border-stone-200 rounded-3xl p-10 text-center mb-8 bg-stone-50/50">
+                        <p class="text-xs text-stone-400 font-bold uppercase tracking-widest">Attach Manuscript (PDF/TXT)</p>
+                        <input type="file" id="upFile" class="mt-4 text-xs mx-auto">
+                    </div>
+                    <button onclick="handleUpload()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-black shadow-lg">Submit for Verification</button>
+                </div>
+            </section>
+
+            <section id="v-admin" class="hidden flex-1 p-16 overflow-y-auto">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="serif text-4xl mb-4 text-stone-900">User Governance</h2>
+                    <p class="text-stone-400 text-sm mb-12 italic">Set institutional privileges for scholars and typists.</p>
+                    <div class="bg-white rounded-[32px] border border-stone-200 overflow-hidden shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-stone-50 text-[10px] uppercase font-black tracking-widest text-stone-400 border-b border-stone-100">
+                                <tr><th class="p-8">Identity</th><th class="p-8">Role</th><th class="p-8 text-right">Access Level</th></tr>
+                            </thead>
+                            <tbody id="adminTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="v-profile" class="hidden flex-1 p-20 flex justify-center">
+                <div class="max-w-md w-full bg-white p-12 rounded-[40px] shadow-sm border border-stone-200 h-fit text-center">
+                    <h2 class="serif text-3xl mb-8">Account Security</h2>
+                    <input type="password" id="newPass" placeholder="Enter New Password" class="w-full p-4 bg-stone-50 border rounded-2xl outline-none text-sm mb-6">
+                    <button onclick="updatePass()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold">Update Password</button>
+                </div>
             </section>
         </main>
 
-        <aside id="previewPane" class="w-0 bg-white border-l border-stone-200 flex flex-col overflow-hidden transition-all duration-300">
+        <aside id="previewPane" class="w-0 bg-white border-l border-stone-200 flex flex-col overflow-hidden">
             <div id="previewContent" class="p-10 invisible opacity-0 transition-opacity flex flex-col h-full">
                 </div>
         </aside>
     </div>
 
     <script>
-        const S_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
-        const S_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
-        const client = supabase.createClient(S_URL, S_KEY);
-        let currentUserRole = 'public';
+        const SB_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
+        const SB_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
+        const kClient = supabase.createClient(SB_URL, SB_KEY);
 
-        async function demo(u) {
+        let userRole = 'public';
+        let isSanskrit = false;
+        let activeID = null;
+
+        // Translit Map
+        const translitMap = {
+            'a': 'अ', 'A': 'आ', 'i': 'इ', 'I': 'ई', 'u': 'उ', 'U': 'ऊ', 'R': 'ऋ', 'e': 'ए', 'E': 'ऐ', 'o': 'ओ', 'O': 'औ',
+            'k': 'क', 'K': 'ख', 'g': 'ग', 'G': 'घ', 'q': 'ङ', 'c': 'च', 'C': 'छ', 'j': 'ज', 'J': 'झ', 'Y': 'ञ',
+            't': 'त', 'T': 'थ', 'd': 'द', 'D': 'ध', 'n': 'न', 'p': 'प', 'P': 'फ', 'b': 'ब', 'B': 'भ', 'm': 'म',
+            'y': 'य', 'r': 'र', 'l': 'ल', 'v': 'व', 's': 'स', 'S': 'श', 'z': 'ष', 'h': 'ह', '.': '।', ',': '॥', 'M': 'ं', 'H': 'ः'
+        };
+
+        // --- AUTH ---
+        async function quickDemo(u) {
             document.getElementById('uIn').value = u;
             document.getElementById('pIn').value = "demo123";
-            login();
+            handleLogin();
         }
 
-        async function login() {
-            const u = document.getElementById('uIn').value;
-            const p = document.getElementById('pIn').value;
-            const e = u.includes('@') ? u : u + "@kaula.org";
-            const { data, error } = await client.auth.signInWithPassword({ email: e, password: p });
-            if (error) alert(error.message); else location.reload();
+        async function handleLogin() {
+            const user = document.getElementById('uIn').value;
+            const pass = document.getElementById('pIn').value;
+            const email = user.includes('@') ? user : user + "@kaula.org";
+            const { data, error } = await kClient.auth.signInWithPassword({ email, password: pass });
+            if (error) alert("Access Denied"); else location.reload();
         }
 
-        async function init() {
-            const { data: { session } } = await client.auth.getSession();
+        async function initApp() {
+            const { data: { session } } = await kClient.auth.getSession();
             if (session) {
                 document.getElementById('authPage').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                loadProfile(session.user);
+                loadAppProfile(session.user);
             }
         }
 
-        async function loadProfile(user) {
-            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).single();
-            currentUserRole = profile?.role || 'public';
-            document.getElementById('uName').innerText = profile?.full_name || user.email.split('@')[0];
-            document.getElementById('uRole').innerText = currentUserRole;
-            if (currentUserRole === 'admin') document.getElementById('navAdmin').classList.remove('hidden');
-            fetchData();
+        async function loadAppProfile(user) {
+            const { data: profile } = await kClient.from('profiles').select('*').eq('id', user.id).single();
+            userRole = profile?.role || 'public';
+            document.getElementById('uiName').innerText = profile?.full_name || user.email.split('@')[0];
+            document.getElementById('uiRole').innerText = userRole;
+
+            if (['admin', 'typist'].includes(userRole)) document.getElementById('navUpload').classList.remove('hidden');
+            if (userRole === 'admin') {
+                document.getElementById('navAdmin').classList.remove('hidden');
+                loadGovernanceData();
+            }
+
+            if (profile?.last_manuscript_id) {
+                const { data: m } = await kClient.from('manuscripts').select('title_iast').eq('id', profile.last_manuscript_id).single();
+                if (m) {
+                    document.getElementById('resumeBox').classList.remove('hidden');
+                    document.getElementById('resumeTitle').innerText = m.title_iast;
+                    window.resumeID = profile.last_manuscript_id;
+                }
+            }
+            fetchLibrary();
         }
 
-        async function fetchData() {
+        // --- CATALOG ---
+        async function fetchLibrary() {
             const search = document.getElementById('mSearch').value;
-            const tantra = document.getElementById('fTantra').value;
-            let query = client.from('manuscripts').select('*');
+            const authFilter = document.getElementById('filterAuthor').value;
+            const tantraFilter = document.getElementById('filterTantra').value;
+
+            let query = kClient.from('manuscripts').select('*');
             if (search) query = query.ilike('search_blob', `%${search}%`);
-            if (tantra) query = query.eq('subject', tantra);
+            if (authFilter) query = query.eq('author', authFilter);
+            if (tantraFilter) query = query.eq('subject', tantraFilter);
+
             const { data } = await query.limit(20);
             document.getElementById('catalogList').innerHTML = data.map(m => `
-                <div onclick="preview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" class="bg-white p-5 rounded-2xl border border-stone-100 flex justify-between items-center hover:border-orange-300 cursor-pointer shadow-sm">
-                    <div>
-                        <h4 class="font-bold text-stone-800">${m.title_iast}</h4>
-                        <p class="text-[9px] text-stone-400 font-bold uppercase">${m.catalog_no || 'TBD'}</p>
+                <div onclick="openStudyRoom(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" class="bg-white p-6 rounded-[24px] border border-stone-100 flex justify-between items-center hover:border-orange-300 cursor-pointer shadow-sm transition-all group">
+                    <div class="flex items-center space-x-6">
+                        <span class="text-[10px] font-black text-stone-300 bg-stone-50 px-3 py-1 rounded-lg">${m.catalog_no || 'TBD'}</span>
+                        <div>
+                            <h4 class="font-bold text-stone-800 group-hover:text-orange-900">${m.title_iast}</h4>
+                            <p class="text-[9px] text-stone-400 font-bold uppercase tracking-widest">${m.subject}</p>
+                        </div>
                     </div>
-                    <p class="text-[9px] text-stone-300 italic">Revision: ${m.last_revision_date ? new Date(m.last_revision_date).toLocaleDateString() : 'Original'}</p>
+                    <div class="text-right">
+                        <p class="text-[9px] text-stone-300 italic">Revision: ${m.last_revision_date ? new Date(m.last_revision_date).toLocaleDateString() : 'Original'}</p>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function preview(m, el) {
+        // --- STUDY ROOM & EDITOR ---
+        function openStudyRoom(m, el) {
             document.querySelectorAll('#catalogList > div').forEach(d => d.classList.remove('active-row'));
             el.classList.add('active-row');
+            activeID = m.id;
+
             const pane = document.getElementById('previewPane');
             const content = document.getElementById('previewContent');
-            pane.style.width = "600px";
+            pane.style.width = "650px";
             content.classList.remove('invisible', 'opacity-0');
 
-            const canEdit = ['admin', 'typist', 'proofreader'].includes(currentUserRole);
-            const revisionDate = m.last_revision_date ? new Date(m.last_revision_date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Pending Initial Entry';
+            const canEdit = ['admin', 'typist', 'proofreader'].includes(userRole);
+            const revDate = m.last_revision_date ? new Date(m.last_revision_date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Initial';
 
             content.innerHTML = `
-                <div class="flex justify-between items-center mb-6">
-                    <button onclick="closePane()" class="text-[9px] font-black uppercase tracking-widest text-stone-400">✕ Close</button>
-                    <div class="text-right">
-                        <p class="text-[9px] font-black text-orange-600 uppercase tracking-widest">Revision Date</p>
-                        <p class="text-[10px] text-stone-500 font-bold">${revisionDate}</p>
+                <div class="flex justify-between items-center mb-8">
+                    <button onclick="closePane()" class="text-[9px] font-black uppercase text-stone-300 hover:text-black">✕ Close Room</button>
+                    <div class="flex items-center space-x-6">
+                        <div class="flex items-center bg-stone-100 p-1 rounded-full px-4 border border-stone-200">
+                            <span class="text-[9px] font-black text-stone-500 uppercase mr-3">Sanskrit Mode</span>
+                            <input type="checkbox" onchange="isSanskrit = this.checked" class="w-4 h-4 cursor-pointer accent-orange-600">
+                        </div>
+                        <div class="text-right border-l border-stone-100 pl-4">
+                            <p class="text-[8px] font-black text-orange-600 uppercase">Rev Date</p>
+                            <p class="text-[10px] font-bold text-stone-800">${revDate}</p>
+                        </div>
                     </div>
                 </div>
-                
-                <h2 class="serif text-3xl mb-1">${m.title_iast}</h2>
-                <p class="text-xl text-stone-400 mb-8 italic border-b pb-4">${m.title_dev || ''}</p>
-                
+
+                <h2 class="serif text-4xl text-stone-900 mb-1 leading-tight">${m.title_iast}</h2>
+                <p class="text-xl text-stone-400 italic mb-8 border-b border-stone-100 pb-6">${m.title_dev || ''}</p>
+
                 <div class="flex-1 flex flex-col">
-                    <label class="text-[10px] font-black text-stone-400 uppercase mb-2">Manuscript Content (Typed Portal Entry)</label>
-                    <textarea id="editorContent" ${!canEdit ? 'readonly' : ''} 
-                        class="flex-1 w-full p-6 bg-stone-50 border border-stone-100 rounded-3xl font-serif text-lg leading-relaxed outline-none focus:ring-2 focus:ring-orange-100 resize-none"
-                        placeholder="Start typing the Sanskrit Unicode here...">${m.content || ''}</textarea>
+                    <label class="text-[10px] font-black text-stone-400 uppercase mb-3">Manuscript Content (Live Editor)</label>
+                    <textarea id="liveEditor" ${!canEdit ? 'readonly' : ''} 
+                        onkeypress="handleTranslit(event)"
+                        class="flex-1 w-full p-8 bg-stone-50 border border-stone-100 rounded-[40px] font-serif text-xl leading-relaxed outline-none focus:ring-4 focus:ring-orange-100/50 resize-none shadow-inner"
+                        placeholder="Start typing or editing...">${m.content || ''}</textarea>
                 </div>
 
-                ${canEdit ? `
-                    <button onclick="saveEdit(${m.id})" class="mt-6 w-full bg-stone-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all">
-                        Update Manuscript & Timestamp
-                    </button>
-                ` : ''}
+                <div class="mt-8 flex space-x-3">
+                    <button onclick="saveCurrentID(${m.id})" class="flex-1 border border-stone-200 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 transition-all">Save Study Session</button>
+                    ${canEdit ? `<button onclick="saveManuscriptChanges(${m.id})" class="flex-[2] bg-stone-900 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black shadow-xl">Update & Timestamp</button>` : ''}
+                </div>
+                <button class="w-full mt-3 bg-white border border-stone-200 text-stone-800 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest">Download Official PDF</button>
             `;
         }
 
-        async function saveEdit(id) {
-            const newContent = document.getElementById('editorContent').value;
-            const now = new Date().toISOString();
-            
-            const { error } = await client.from('manuscripts').update({ 
-                content: newContent,
-                last_revision_date: now 
-            }).eq('id', id);
-
-            if (error) alert("Error saving: " + error.message);
-            else {
-                alert("Manuscript Updated. Revision Date Stamped: " + new Date().toLocaleDateString());
-                fetchData();
+        function handleTranslit(e) {
+            if (!isSanskrit) return;
+            const textarea = e.target;
+            const char = e.key;
+            if (translitMap[char]) {
+                e.preventDefault();
+                const start = textarea.selectionStart;
+                textarea.value = textarea.value.substring(0, start) + translitMap[char] + textarea.value.substring(textarea.selectionEnd);
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
             }
         }
 
+        async function saveManuscriptChanges(id) {
+            const body = document.getElementById('liveEditor').value;
+            const { error } = await kClient.from('manuscripts').update({ content: body, last_revision_date: new Date().toISOString() }).eq('id', id);
+            if (!error) { alert("Manuscript Stamped & Saved."); fetchLibrary(); }
+        }
+
+        async function saveCurrentID(id) {
+            const { data: { user } } = await kClient.auth.getUser();
+            await kClient.from('profiles').update({ last_manuscript_id: id }).eq('id', user.id);
+            alert("Reading position saved for Sigra lab session.");
+        }
+
+        // --- UTILS ---
+        function switchView(v) {
+            ['catalog', 'upload', 'admin', 'profile'].forEach(s => {
+                const el = document.getElementById('v-'+s);
+                if(el) el.classList.toggle('hidden', s !== v);
+            });
+            closePane();
+        }
+
+        async function loadGovernanceData() {
+            const { data } = await kClient.from('profiles').select('*');
+            document.getElementById('adminTableBody').innerHTML = data.map(p => `
+                <tr class="border-t border-stone-50 hover:bg-stone-50/50 transition-all">
+                    <td class="px-8 py-6 font-bold text-stone-800">${p.full_name || 'System User'}</td>
+                    <td class="px-8 py-6 text-[10px] font-black uppercase text-stone-400 tracking-widest">${p.role}</td>
+                    <td class="px-8 py-6 text-right">
+                        <select onchange="updateUserRole('${p.id}', this.value)" class="bg-stone-100 rounded-xl text-[10px] font-bold p-2 outline-none">
+                            <option ${p.role==='public'?'selected':''}>public</option>
+                            <option ${p.role==='scholar'?'selected':''}>scholar</option>
+                            <option ${p.role==='typist'?'selected':''}>typist</option>
+                            <option ${p.role==='proofreader'?'selected':''}>proofreader</option>
+                            <option ${p.role==='admin'?'selected':''}>admin</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateUserRole(uid, role) {
+            await kClient.from('profiles').update({ role }).eq('id', uid);
+            alert("Privileges updated.");
+        }
+
         function closePane() { document.getElementById('previewPane').style.width = "0px"; }
-        function logout() { client.auth.signOut(); location.reload(); }
-        window.onload = init;
+        async function handleLogout() { await kClient.auth.signOut(); location.reload(); }
+        window.onload = initApp;
     </script>
 </body>
 </html>
