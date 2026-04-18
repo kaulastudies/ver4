@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaula Research Archive - Institutional Portal</title>
+    <title>Kaula Archive - Institutional Portal</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fcfaf8; color: #1c1917; }
+        body { font-family: 'Inter', sans-serif; background-color: #fcfaf8; }
         .serif { font-family: 'Playfair Display', serif; }
-        .mono { font-family: 'Fira Code', monospace; }
         .hidden { display: none; }
-        
-        /* Smooth Scrolling & Custom UI */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 10px; }
-        .demo-pill { @apply px-4 py-2 rounded-full border border-stone-200 text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 transition-all text-stone-600 cursor-pointer flex items-center justify-center; }
-        .active-row { border-left: 4px solid #c2410c !important; background-color: #fffaf0 !important; }
+        .demo-btn { cursor: pointer; border: 1px solid #e7e5e4; padding: 8px 16px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s; }
+        .demo-btn:hover { background-color: #f5f5f4; border-color: #d6d3d1; }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col">
@@ -28,98 +23,136 @@
         <div class="bg-white p-12 rounded-[50px] shadow-2xl w-[450px] border border-stone-200">
             <div class="text-center mb-10">
                 <h1 class="serif text-4xl text-stone-900 mb-2">Kaula Archive</h1>
-                <p class="text-[10px] text-stone-400 uppercase tracking-[0.3em] font-bold">Varanasi Digital Heritage</p>
+                <p class="text-[10px] text-stone-400 uppercase tracking-[0.3em] font-bold">Varanasi Digital Lab</p>
             </div>
             
             <div class="space-y-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-stone-400 uppercase ml-2">Username</label>
-                    <input type="text" id="username" placeholder="e.g. admin" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-stone-400 uppercase ml-2">Password</label>
-                    <input type="password" id="password" placeholder="••••••••" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm">
-                </div>
-                <button onclick="handleAuth()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg">Sign In</button>
+                <input type="text" id="usernameField" placeholder="Username" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                <input type="password" id="passwordField" placeholder="Password" class="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                <button onclick="performLogin()" class="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all">Sign In</button>
             </div>
 
             <div class="mt-10 pt-8 border-t border-stone-100 text-center">
-                <p class="text-[9px] text-orange-600 font-black uppercase tracking-widest mb-4 italic underline underline-offset-4 decoration-2">Demonstration Access</p>
+                <p class="text-[9px] text-orange-600 font-black uppercase tracking-widest mb-4 italic">Guruji's Demo Access</p>
                 <div class="flex flex-wrap justify-center gap-2">
-                    <div onclick="quickDemo('admin')" class="demo-pill border-orange-200 text-orange-700">Admin</div>
-                    <div onclick="quickDemo('scholar')" class="demo-pill border-blue-200 text-blue-700">Scholar</div>
-                    <div onclick="quickDemo('proof')" class="demo-pill">Proofreader</div>
-                    <div onclick="quickDemo('typist')" class="demo-pill">Typist</div>
-                    <div onclick="quickDemo('guest')" class="demo-pill bg-stone-900 text-white border-none">Guest</div>
+                    <div onclick="fillAndLogin('admin')" class="demo-btn text-orange-700 border-orange-200">Admin</div>
+                    <div onclick="fillAndLogin('scholar')" class="demo-btn text-blue-700 border-blue-200">Scholar</div>
+                    <div onclick="fillAndLogin('proof')" class="demo-btn">Proofreader</div>
+                    <div onclick="fillAndLogin('typist')" class="demo-btn">Typist</div>
+                    <div onclick="fillAndLogin('guest')" class="demo-btn bg-stone-900 text-white border-none">Guest</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="dashboard" class="hidden flex h-full">
-        
-        <aside class="w-72 bg-stone-950 text-stone-400 flex flex-col border-r border-stone-900">
-            <div class="p-8">
-                <h2 class="text-white font-bold tracking-tighter text-2xl italic">Archive <span class="text-orange-500">OS</span></h2>
+        <aside class="w-72 bg-stone-950 text-stone-400 flex flex-col">
+            <div class="p-8 border-b border-stone-900">
+                <h2 class="text-white font-bold text-2xl">KAULA <span class="text-orange-500">DB</span></h2>
             </div>
-            
-            <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
-                <div id="historySection" class="my-8">
-                    <p class="px-4 text-[9px] uppercase tracking-[0.2em] font-black text-stone-600 mb-4">Continuing Study</p>
-                    <div id="recentReadings" class="space-y-1 px-2 text-stone-200">
-                        </div>
+            <nav class="flex-1 p-6 space-y-4">
+                <div>
+                    <p class="text-[9px] font-black text-stone-600 uppercase mb-4 tracking-widest">Navigation</p>
+                    <button onclick="showView('catalog')" class="text-sm hover:text-white transition-colors">📖 Library Catalog</button>
                 </div>
-
-                <p class="px-4 text-[9px] uppercase tracking-[0.2em] font-black text-stone-600 mb-4">Library</p>
-                <button onclick="switchView('catalog')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-sm font-medium">📖 Library Catalog</button>
-                
-                <div id="adminMenu" class="hidden space-y-2 mt-8">
-                    <p class="px-4 text-[9px] uppercase tracking-[0.2em] font-black text-stone-600 my-4">Governance</p>
-                    <button onclick="switchView('admin')" class="w-full text-left px-4 py-3 rounded-xl bg-orange-600/10 text-orange-500 text-sm font-bold">🛡️ User Management</button>
+                <div id="adminLink" class="hidden">
+                    <p class="text-[9px] font-black text-stone-600 uppercase mb-4 mt-8 tracking-widest">Admin</p>
+                    <button onclick="showView('admin')" class="text-sm text-orange-400 font-bold">🛡️ Manage Users</button>
                 </div>
             </nav>
-
-            <div class="p-6 bg-black flex items-center justify-between border-t border-stone-900">
-                <div>
-                    <p class="text-xs text-white font-bold" id="ui-display-name">--</p>
-                    <p class="text-[9px] uppercase text-stone-500 font-black tracking-widest" id="ui-display-role">--</p>
-                </div>
-                <button onclick="handleLogout()" class="text-[10px] font-black text-stone-700 hover:text-white uppercase">Exit</button>
+            <div class="p-6 bg-black border-t border-stone-900">
+                <p class="text-xs text-white font-bold" id="displayName">--</p>
+                <p class="text-[9px] uppercase text-stone-500" id="displayRole">--</p>
+                <button onclick="doLogout()" class="mt-4 text-[10px] text-stone-700 uppercase font-bold hover:text-white">Sign Out</button>
             </div>
         </aside>
 
-        <main class="flex-1 bg-[#fcfaf8] overflow-hidden flex flex-col">
-            
-            <section id="view-catalog" class="flex-1 p-10 overflow-y-auto">
-                <div class="max-w-5xl mx-auto">
-                    <header class="mb-10">
-                        <h2 class="serif text-5xl text-stone-900 mb-4">Digital Repository</h2>
-                        <div class="w-24 h-1 bg-orange-500 rounded-full"></div>
-                    </header>
-                    <input type="text" id="catalogSearch" oninput="loadCatalogData()" placeholder="Search volumes, chapters, or keywords..." class="w-full p-5 rounded-[24px] border-none shadow-sm focus:ring-2 focus:ring-orange-500 text-sm mb-10 transition-all outline-none">
-                    <div id="catalogContainer" class="grid grid-cols-1 gap-4">
-                        </div>
-                </div>
-            </section>
-
-            <section id="view-admin" class="hidden flex-1 p-12 overflow-y-auto">
-                <div class="max-w-5xl mx-auto">
-                    <h2 class="serif text-4xl mb-12">Institutional Roles</h2>
-                    <div class="bg-white rounded-[32px] border border-stone-200 overflow-hidden shadow-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-stone-50 text-[10px] uppercase font-black tracking-widest text-stone-400 border-b border-stone-100">
-                                <tr><th class="p-8">Identity</th><th class="p-8">Assigned Role</th><th class="p-8 text-right">Action</th></tr>
-                            </thead>
-                            <tbody id="adminUserTable">
-                                </tbody>
-                        </table>
+        <main class="flex-1 bg-[#fcfaf8] p-10 overflow-y-auto">
+            <section id="view-catalog">
+                <h2 class="serif text-4xl mb-8">Manuscript Repository</h2>
+                <div id="catalogItems" class="space-y-3">
                     </div>
-                </div>
+            </section>
+            <section id="view-admin" class="hidden">
+                <h2 class="serif text-4xl mb-8">User Governance</h2>
+                <div id="userTable" class="bg-white rounded-3xl border border-stone-200 p-6 shadow-sm">
+                    </div>
             </section>
         </main>
     </div>
 
     <script>
-        // 1. CONFIGURATION
-        const SB_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
-        const SB_KEY = "sb_publishable_XObSGljjo-VILprIHw
+        // 1. Connection (using a unique name to avoid crashes)
+        const MY_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
+        const MY_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
+        const kaulaClient = supabase.createClient(MY_URL, MY_KEY);
+
+        // 2. Demo Logic
+        function fillAndLogin(user) {
+            document.getElementById('usernameField').value = user;
+            document.getElementById('passwordField').value = "demo123";
+            performLogin();
+        }
+
+        async function performLogin() {
+            const user = document.getElementById('usernameField').value;
+            const pass = document.getElementById('passwordField').value;
+            const email = user.includes('@') ? user : user + "@kaula.org";
+
+            const { data, error } = await kaulaClient.auth.signInWithPassword({ email, password: pass });
+            if (error) {
+                alert("Login Error: " + error.message);
+            } else {
+                location.reload();
+            }
+        }
+
+        // 3. App State
+        async function checkSession() {
+            const { data: { session } } = await kaulaClient.auth.getSession();
+            if (session) {
+                document.getElementById('authPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                loadUserData(session.user);
+            }
+        }
+
+        async function loadUserData(user) {
+            const { data: profile } = await kaulaClient.from('profiles').select('*').eq('id', user.id).single();
+            const role = profile?.role || 'public';
+
+            document.getElementById('displayName').innerText = profile?.full_name || user.email.split('@')[0];
+            document.getElementById('displayRole').innerText = role;
+
+            if (role === 'admin') document.getElementById('adminLink').classList.remove('hidden');
+            
+            fetchCatalog();
+        }
+
+        async function fetchCatalog() {
+            const { data } = await kaulaClient.from('manuscripts').select('*').limit(20);
+            const container = document.getElementById('catalogItems');
+            if (data) {
+                container.innerHTML = data.map(m => `
+                    <div class="bg-white p-5 rounded-2xl border border-stone-100 flex justify-between items-center shadow-sm">
+                        <span class="font-bold text-stone-800">${m.title_iast}</span>
+                        <span class="text-[10px] font-black text-stone-300 uppercase">${m.subject}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showView(view) {
+            document.getElementById('view-catalog').classList.toggle('hidden', view !== 'catalog');
+            document.getElementById('view-admin').classList.toggle('hidden', view !== 'admin');
+        }
+
+        async function doLogout() {
+            await kaulaClient.auth.signOut();
+            location.reload();
+        }
+
+        window.onload = checkSession;
+    </script>
+</body>
+</html>
