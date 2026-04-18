@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaula Institutional Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fcfaf8; }
+        .serif { font-family: 'Playfair Display', serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+
+    <div id="loginPage" class="flex items-center justify-center h-full bg-stone-100">
+        <div class="bg-white p-10 rounded-3xl shadow-xl w-96 border border-stone-200">
+            <h1 class="serif text-3xl text-stone-900 mb-2 text-center">Kaula Archive</h1>
+            <p class="text-xs text-stone-400 uppercase tracking-widest text-center mb-8">Secure Institutional Entry</p>
+            
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email Address" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500">
+                <input type="password" id="password" placeholder="Password" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500">
+                <button onclick="handleLogin()" class="w-full bg-stone-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-all">Enter Portal</button>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-stone-100">
+                <p class="text-[10px] text-stone-400 text-center mb-2 font-bold uppercase">Public Access</p>
+                <button onclick="guestLogin()" class="w-full bg-orange-50 text-orange-700 py-2 rounded-lg text-xs font-bold hover:bg-orange-100">Browse as Guest</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainDashboard" class="hidden flex h-full">
+        
+        <aside class="w-72 bg-stone-900 text-stone-300 flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-stone-800">
+                <h2 class="text-white font-bold tracking-tighter text-xl uppercase">Archive <span class="text-orange-500">OS</span></h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <p class="px-3 text-[10px] uppercase tracking-widest text-stone-500 font-bold my-4">Library</p>
+                <button onclick="showSection('library')" class="w-full text-left px-3 py-2 rounded-md hover:bg-stone-800 transition-colors text-sm">📜 Manuscript Catalog</button>
+                
+                <div id="uploaderMenu" class="hidden">
+                    <p class="px-3 text-[10px] uppercase tracking-widest text-stone-500 font-bold my-4 font-bold">Contribution</p>
+                    <button onclick="showSection('upload')" class="w-full text-left px-3 py-2 rounded-md hover:bg-stone-800 transition-colors text-sm">📤 New Upload</button>
+                </div>
+
+                <div id="adminMenu" class="hidden">
+                    <p class="px-3 text-[10px] uppercase tracking-widest text-stone-500 font-bold my-4">Governance</p>
+                    <button onclick="showSection('admin')" class="w-full text-left px-3 py-2 rounded-md hover:bg-stone-800 transition-colors text-sm text-orange-400">📊 Admin Dashboard</button>
+                </div>
+            </nav>
+
+            <div class="p-6 bg-stone-950 border-t border-stone-800">
+                <div id="userBadge" class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-xs">R</div>
+                    <div>
+                        <p class="text-xs text-white font-bold" id="userName">Ramachandra</p>
+                        <p class="text-[9px] text-stone-500 uppercase tracking-widest" id="userRole">Scholar</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="mt-4 text-[10px] text-stone-600 uppercase font-bold hover:text-white">Sign Out</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            
+            <section id="section-library" class="flex-1 flex flex-col">
+                <header class="h-16 bg-white border-b border-stone-200 flex items-center px-8 shadow-sm">
+                    <input type="text" id="search" placeholder="Quick Search..." class="w-96 bg-stone-100 rounded-full py-2 px-6 text-xs outline-none focus:ring-2 focus:ring-orange-200">
+                </header>
+                <div id="manuscriptList" class="flex-1 overflow-y-auto p-8 space-y-3">
+                    </div>
+            </section>
+
+            <section id="section-upload" class="hidden flex-1 p-12 overflow-y-auto">
+                <div class="max-w-2xl mx-auto bg-white p-10 rounded-3xl border border-stone-200">
+                    <h2 class="serif text-3xl mb-8">Submit Manuscript</h2>
+                    <div class="space-y-6">
+                        <input type="text" id="up-title" placeholder="IAST Title" class="w-full p-4 bg-stone-50 border rounded-xl outline-none">
+                        <input type="text" id="up-dev" placeholder="Devanagari Title" class="w-full p-4 bg-stone-50 border rounded-xl outline-none">
+                        <select id="up-subject" class="w-full p-4 bg-stone-50 border rounded-xl outline-none">
+                            <option>SSTRS</option><option>AAJNAA</option><option>KHNOTES</option>
+                        </select>
+                        <button onclick="submitManuscript()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold">Verify & Upload</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-admin" class="hidden flex-1 p-12 overflow-y-auto">
+                <h2 class="serif text-4xl mb-10">Archive Governance</h2>
+                <div class="grid grid-cols-3 gap-6 mb-12">
+                    <div class="bg-white p-6 rounded-2xl border border-stone-200">
+                        <p class="text-[10px] font-bold text-stone-400 uppercase">Total Manuscripts</p>
+                        <h3 class="text-3xl font-bold mt-2" id="stat-total">--</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-stone-200">
+                        <p class="text-[10px] font-bold text-stone-400 uppercase">Verification Pending</p>
+                        <h3 class="text-3xl font-bold mt-2 text-orange-600" id="stat-pending">--</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-stone-200">
+                        <p class="text-[10px] font-bold text-stone-400 uppercase">Active Researchers</p>
+                        <h3 class="text-3xl font-bold mt-2" id="stat-active">--</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-stone-200 p-8">
+                    <h4 class="font-bold text-sm mb-6 uppercase tracking-widest text-stone-400">Recent Global Access</h4>
+                    <div id="accessLogs" class="space-y-4">
+                        </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+
+        // AUTH LOGIC
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) alert(error.message);
+            else initApp(data.user);
+        }
+
+        async function initApp(user) {
+            currentUser = user;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            
+            // Get Role
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            const role = profile ? profile.role : 'public';
+            
+            document.getElementById('userName').innerText = profile ? profile.full_name : 'Guest Scholar';
+            document.getElementById('userRole').innerText = role;
+
+            // Role-based UI UI
+            if (role === 'admin' || role === 'scholar' || role === 'uploader') document.getElementById('uploaderMenu').classList.remove('hidden');
+            if (role === 'admin') {
+                document.getElementById('adminMenu').classList.remove('hidden');
+                loadStats();
+            }
+            loadCatalog();
+        }
+
+        function showSection(sectionId) {
+            ['library', 'upload', 'admin'].forEach(s => document.getElementById(`section-${s}`).classList.add('hidden'));
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+        }
+
+        async function loadCatalog() {
+            const { data } = await supabase.from('manuscripts').select('*').limit(50);
+            const list = document.getElementById('manuscriptList');
+            list.innerHTML = data.map(m => `
+                <div class="bg-white p-4 rounded-xl border border-stone-200 flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="text-[10px] font-bold text-stone-400">${m.catalog_no || 'TBD'}</p>
+                        <h4 class="font-bold text-stone-800">${m.title_iast}</h4>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${m.status === 'verified' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}">
+                        ${m.status}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        async function loadStats() {
+            const { count: total } = await supabase.from('manuscripts').select('*', { count: 'exact', head: true });
+            const { count: pending } = await supabase.from('manuscripts').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-active').innerText = Math.floor(Math.random() * 20) + 5; // Placeholder
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.reload();
+        }
+
+        async function guestLogin() {
+            // Logic for a shared public account
+            alert("Guest access granted for browse-only.");
+            initApp({ id: 'guest', email: 'public@kaula.com' });
+        }
+    </script>
+</body>
+</html>
